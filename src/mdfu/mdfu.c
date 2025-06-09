@@ -537,9 +537,13 @@ ssize_t mdfu_write_chunk(const image_reader_t *image_reader, int size){
         ERROR("%s", strerror(errno));
         return -1;
     }
-    mdfu_cmd_packet.data_length = (uint16_t) read_size;
-    if(mdfu_send_cmd(&mdfu_cmd_packet, &mdfu_status_packet) < 0){
-        return -1;
+    if(read_size == 0){
+        DEBUG("Reached end of image file");
+    } else {
+        mdfu_cmd_packet.data_length = (uint16_t) read_size;
+        if(mdfu_send_cmd(&mdfu_cmd_packet, &mdfu_status_packet) < 0){
+            return -1;
+        }
     }
     return read_size;
 }
