@@ -12,6 +12,15 @@ target_include_directories(cmdfu PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(cmdfu PRIVATE mdfulib toolslib transportlib maclib utilslib)
 
+# Check if the current operating system is Windows
+if(WIN32)
+    # Check if the compiler is MinGW
+    if(MINGW)
+        # Set additional linker flags for MinGW to statically link libraries
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ -static")
+    endif()
+endif()
+
 # Specify the installation rules
 install(TARGETS cmdfu
     RUNTIME DESTINATION bin  # For Windows and Unix-like systems

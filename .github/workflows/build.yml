@@ -1,0 +1,50 @@
+name: CMake Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            cmake_config_flags: ""
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: windows-latest
+            cmake_config_flags: "-D LINUX_SUBSYSTEM_I2C=OFF -D LINUX_SUBSYSTEM_SPI=OFF -D LINUX_SUBSYSTEM_NETWORK=OFF -D LINUX_SUBSYSTEM_SERIAL=OFF -D WINDOWS_SUBSYSTEM_SERIAL=ON"
+            cmake_build_flags: "--target cmdfu"
+            c_compiler: gcc
+            cpp_compiler: g++
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Set up CMake
+      uses: lukka/get-cmake@latest
+      with:
+          cmakeVersion: "^3.25.0"
+
+    - name: Configure CMake
+      run: cmake -S . -B build -G "Ninja" ${{ matrix.cmake_config_flags }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+
+
+    - name: Build
+      run: cmake --build build ${{ matrix.cmake_build_flags}}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cmdfu-${{ runner.os }}
+        path: |
+          build/apps/cmdfu
+          build/apps/cmdfu.exe
