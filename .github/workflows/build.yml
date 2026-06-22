@@ -1,5 +1,10 @@
-name: CMake Build
+# Workflow for cmdfu CMake builds on multiple platforms and compilers
+name: cmdfu CMake builds on multiple platforms
 
+# Builds are triggered by:
+# - Manual interaction (workflow_dispatch)
+# - Push to main branch
+# - Pull request to main branch
 on:
   push:
     branches: [ main ]
@@ -9,21 +14,29 @@ on:
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        c_compiler: [gcc, clang]
         include:
           - os: ubuntu-latest
             cmake_config_flags: ""
             c_compiler: gcc
             cpp_compiler: g++
+          - os: ubuntu-latest
+            cmake_config_flags: ""
+            c_compiler: clang
+            cpp_compiler: clang++
           - os: windows-latest
             cmake_config_flags: "-D LINUX_SUBSYSTEM_I2C=OFF -D LINUX_SUBSYSTEM_SPI=OFF -D LINUX_SUBSYSTEM_NETWORK=OFF -D LINUX_SUBSYSTEM_SERIAL=OFF -D WINDOWS_SUBSYSTEM_SERIAL=ON"
             cmake_build_flags: "--target cmdfu"
             c_compiler: gcc
             cpp_compiler: g++
+        exclude:
+          - os: windows-latest
+            c_compiler: clang
+
 
     steps:
     - name: Checkout source
@@ -41,10 +54,16 @@ jobs:
     - name: Build
       run: cmake --build build ${{ matrix.cmake_build_flags}}
 
+    # Store build artifact. The file name is created by using the OS type and compiler so we will have artifacts:
+    # - cmdfu-Linux-gcc.zip
+    # - cmdfu-Linux-clang.zip
+    # - cmdfu-Window-gcc.zip
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: cmdfu-${{ runner.os }}
+        # Name of the zip archive artifact
+        name: cmdfu-${{ runner.os }}-${{ matrix.c_compiler }}
+        # Missing files will be ignored so e.g. the missing cmdfu.exe on a Linux build will be ignored
         path: |
-          build/apps/cmdfu
-          build/apps/cmdfu.exe
+          build/apps/cmdfu/cmdfu
+          build/apps/cmdfu/cmdfu.exe
