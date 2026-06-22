@@ -1,4 +1,19 @@
-# MDFU host application for Linux (cmdfu)
+# cmdfu - Microchip Device Firmware Update (MDFU) Host Tool
+
+`cmdfu` is a lightweight, cross‑platform command‑line host application for performing firmware updates using the Microchip Device Firmware Update (MDFU) protocol. Written in C, cmdfu provides a native, dependency‑free alternative to Python‑based MDFU host tools, making it well suited for production environments, manufacturing, and embedded host systems. The tool implements the MDFU host side of the protocol, enabling reliable in‑field firmware updates for Microchip microcontrollers running an MDFU‑compatible bootloader. It communicates with target devices over supported transport layers (such as UART, SPI, or I²C, depending on configuration) and transfers application image files.
+
+Key Features
+- Native C implementation of an MDFU host
+- Command‑line interface suitable for scripting and automation
+- Implements the MDFU protocol command/response flow and error handling
+- Designed for PC hosts or embedded hosts without Python runtime requirements
+
+Supported interfaces
+- Serial port (Windows/Linux)
+- Linux SPI subsystem
+- Linux I²C subsystem
+
+cmdfu is provided as a reference host implementation to support the broader Microchip MDFU firmware update ecosystem.
 
 ## Configuration
 
