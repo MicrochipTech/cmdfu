@@ -32,6 +32,10 @@ static const char *help_common =
     "                    Print cmdfu release details and exit\n"
     "\n"
     "Optional arguments\n"
+    "    -t <tool>, --tool <tool>\n"
+    "                    Communication tool to use. Run 'cmdfu tools-help' for\n"
+    "                    tool-specific parameters.\n"
+    "\n"
     "    -v <level>, --verbose <level>\n"
     "                    Logging verbosity/severity level. Valid levels are\n"
     "                    [debug, info, warning, error, critical].\n"
@@ -259,7 +263,7 @@ int parse_common_arguments(int argc, char **argv, int *action_argc, char **actio
     {
         {"verbose", required_argument, NULL, 'v'},
         {"version", no_argument, 0, 'V'},
-        {"release", no_argument, 0, 'R'},
+        {"release-info", no_argument, 0, 'R'},
         {"help", no_argument, 0, 'h'},
         {"tool", required_argument, NULL, 't'},
         // last entry must be implemented with name as zero

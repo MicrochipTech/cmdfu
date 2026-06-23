@@ -4,6 +4,10 @@
 #include "mdfu/mdfu.h"
 #include "mdfu/logging.h"
 
+TEST_SOURCE_FILE("../src/mdfu/mdfu.c")
+TEST_SOURCE_FILE("../src/utils/logging.c")
+TEST_SOURCE_FILE("../src/utils/image_reader.c")
+
 extern int mdfu_get_packet_buffer(mdfu_packet_t *cmd_packet, mdfu_packet_t *status_packet);
 extern void mdfu_log_packet(mdfu_packet_t *cmd_packet, mdfu_packet_type_t type);
 extern ssize_t mdfu_encode_cmd_packet(mdfu_packet_t *mdfu_packet);

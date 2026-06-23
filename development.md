@@ -1,158 +1,213 @@
-# Development setup
+# Development Setup
 
-## VSCode C configuration
+## Prerequisites
 
-This project uses some defines that were introduced with the C11 standard and some that take advantage of the glibc library. For the intellisense in VSCode it is necessary to specify these requirements in the `cStandard` setting.
-```json
-            "cStandard": "gnu11",
-```
-### Include paths for header files
+- **CMake** 3.12 or later (CI uses 3.25+)
+- **C compiler**: GCC or Clang on Linux; GCC (MinGW) or MSVC on Windows
+- **Docker** (recommended for running unit tests)
+- **VSCode** with the C/C++ extension (optional but recommended)
 
-CMAKE generates a file called `compile_commands.json` in the build directory that includes the individual commands to build each object in the project. If this file is located in the project root (default build directory) VS Code would pick it up automatically but in a better project setup a specific build directory might be used, and then VS Code C/C++ extension must be told where to find this file. This can be done in the `c_cpp_properties.json`.
+---
 
-```json
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-```
+## Building
 
-### Linux kernel header files for WSL
-
-On WSL some user space headers are not installed e.g. headers required for the I2C subsystem interface. In a usual Linux environment the headers can be installed through the distribution packaging system but for the WSL kernel there is no such package. A manual way to get the headers created is to first clone the WSL kernel repository https://github.com/microsoft/WSL2-Linux-Kernel.
-`git clone --depth 1 https://github.com/microsoft/WSL2-Linux-Kernel.git`
-No full history is needed here so to save some space and time downloading we reduce history with `--depth 1`.
-Make sure that the branch matches the WSL kernel version.
+### Configure
 
 ```bash
-$ git branch -l
-* linux-msft-wsl-5.15.y
-$ uname -r
-5.15.146.1-microsoft-standard-WSL2
+# Default Linux build — all subsystems enabled
+cmake -S . -B build
+
+# Generate compile_commands.json for IDE IntelliSense (recommended)
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+# Windows serial-only build
+cmake -S . -B build \
+  -D LINUX_SUBSYSTEM_I2C=OFF \
+  -D LINUX_SUBSYSTEM_SPI=OFF \
+  -D LINUX_SUBSYSTEM_NETWORK=OFF \
+  -D LINUX_SUBSYSTEM_SERIAL=OFF \
+  -D WINDOWS_SUBSYSTEM_SERIAL=ON
 ```
 
-The next step is to configure the kernel to export the headers and for this some tools are required (Complete list of tools required for building the kernel https://www.kernel.org/doc/html/latest/process/changes.html). Most of these tools are probably already installed in WSL so a trial and error could identify the rest. For configuring the kernel with `menuconfig` on Ubuntu the following packages had to be installed.
+### Build
 
 ```bash
-$ apt-get install bison flex libncurses-dev
+# Build everything (Linux)
+cmake --build build
+
+# Build only the cmdfu executable (required on Windows)
+cmake --build build --target cmdfu
 ```
 
-With the requird packages installed run
-```bash
-$ make KCONFIG_CONFIG=Microsoft/config-wsl menuconfig
+### CMake link order
+
+When linking static libraries the order matters — dependents must be listed before their dependencies:
+
+```cmake
+target_link_libraries(cmdfu PRIVATE mdfulib toolslib transportlib maclib utilslib)
 ```
-to start the configuration based on the config file from Microsoft. In the configuration menu the config name `CONFIG_HEADERS_INSTALL` nees to be set and this is located under
+
+## Linux Kernel Headers
+
+Some subsystems require kernel userspace headers that may not be present in all environments.
+
+### Raspberry Pi
+
+```bash
+apt install raspberrypi-kernel-headers
+```
+
+### WSL2
+
+WSL2 does not provide installable kernel header packages through the distribution's package manager. Headers must be generated from the WSL2 kernel source.
+
+1. Clone the WSL2 kernel repository, matching the branch to your running kernel version:
+
+```bash
+git clone --depth 1 --branch linux-msft-wsl-5.15.y \
+  https://github.com/microsoft/WSL2-Linux-Kernel.git
+```
+
+Verify the branch matches your kernel:
+```bash
+uname -r
+# e.g. 5.15.146.1-microsoft-standard-WSL2
+```
+
+2. Install the tools required to configure the kernel:
+
+```bash
+apt-get install bison flex libncurses-dev
+```
+
+3. Configure the kernel to export headers:
+
+```bash
+make KCONFIG_CONFIG=Microsoft/config-wsl menuconfig
+```
+
+In the menu, enable `CONFIG_HEADERS_INSTALL`:
 ```
 Linux Kernel Configuration
-└─>Kernel hacking
-    └─>Compile-time checks and compiler options
-        └─>Install uapi headers to usr/include
+└─> Kernel hacking
+    └─> Compile-time checks and compiler options
+        └─> Install uapi headers to usr/include
 ```
 
-With the kernel configured the headers can now be generated.
+4. Generate and install the headers:
+
 ```bash
-$ make headers_install INSTALL_HDR_PATH=<my-linux-header-include-path>
+make headers_install INSTALL_HDR_PATH=/usr/include
 ```
 
-The `INSTALL_HDR_DIR_PATH` defines where the headers should be installed and if not provided it will try to install it in the system path, on my Ubuntu WSL this was `/usr/include/`. If installed in the system then VS Code will pick it up automatically in a C/C++ project. Otherwise the path has to be added in the C/C++ properties json file.
+If you install to a non-system path, add it to `"includePath"` in `.vscode/c_cpp_properties.json`:
 
-After saving your configuration, it's a good idea to reload the VS Code window to ensure the new settings are applied. You can do this by opening the Command Palette (`Ctrl+Shift+P`) and typing "Reload Window".
 ```json
 {
     "configurations": [
         {
             "name": "Linux-WSL",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/new/location/of/wsl/kernel/headers/**"
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/build/include/**",
+                "/path/to/wsl/kernel/headers/**"
             ],
-            "defines": [],
             "compilerPath": "/usr/bin/gcc",
-            "cStandard": "gnu11",
-            "cppStandard": "gnu++14",
-            "intelliSenseMode": "linux-gcc-x64"
+            "cStandard": "gnu23",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         }
     ],
     "version": 4
 }
 ```
 
-## Raspberry Pi setup
+After updating `c_cpp_properties.json`, reload the VSCode window (`Ctrl+Shift+P` → "Reload Window").
+
+---
+
+## Unit Tests
+
+Tests use the [Ceedling](https://github.com/ThrowTheSwitch/Ceedling) framework (Unity + CMock). Tests are **Linux-only**. The recommended method is Docker.
+
+The CMake build tree must be configured first — Ceedling's source paths include `../build/include` for the generated header `mdfu_config.h`:
 
 ```bash
-$ apt install raspberrypi-kernel raspberrypi-kernel-headers
+cmake -S . -B build
 ```
 
-## CMAKE build dependencies notes
-
-When linking libraries the sequence can be important for CMAKE. For example this application link configuration `target_link_libraries(mdfu mdfulib toolslib transportlib maclib utilslib)`, where `maclib` might depend on `utilslib`, it is necessary that `utilslib` is listed after `maclib`.
-
-## Test
-
-The preferred method is to use a docker container that includes all required tools.
-
-### Ceedling Installation local
-Install ruby - Note that as of this writing, 25.10.2023, ceedling (gem 0.31.1) did not work with ruby 3.2.x or higher.
-
-Windows installer:
-https://rubyinstaller.org/
-
-Linux (Debian/Ubuntu etc.)
-```bash
-sudo apt-get install ruby
-```
-
-Install ceedling gem
-```bash
-sudo gem install ceedling
-```
-
-In project directory run
-```bash
-ceedling new test
-```
-This will create a test directory containing ceedling test framework for the project.
-
-### Running ceedling locally
-
-To execute all tests run the following command in the test directory
-```
-ceedling test
-```
-The 
-
-To a single test use
-```
-ceedling test:<test name or source file name>
-```
-e.g. `ceedling test:mdfu_client_info.c` or `ceedling test:mdfu_client_info`
-
-### Running ceedling in docker
+### Docker (recommended)
 
 ```bash
-docker pull throwtheswitch/madsciencelab
-docker run -it --rm -v /mnt/z/git/projectx:/project throwtheswitch/madsciencelab
+docker run --rm \
+  -v $(pwd):/home/dev/project \
+  --user $(id -u):$(id -g) \
+  throwtheswitch/madsciencelab:1.0.1b \
+  /bin/bash -c "cd /home/dev/project/test && rm -rf build && ceedling test:all"
 ```
 
-`/mnt/z/git/projectx` is the directory that should be made available in the docker instance as filesystem.
-
-`project` will be the name for the current directory in the docker image file system. Might as well just set this as root dir e.g. `/`.
-
-### Configuration
-
-project.yml
-
-```
-|-- project_root
-    |
-    |-- test
-        |-- test
-            |--support
-        |-- project.yml
-    |-- build
-    |-- src
+To run a single test:
+```bash
+docker run --rm \
+  -v $(pwd):/home/dev/project \
+  --user $(id -u):$(id -g) \
+  throwtheswitch/madsciencelab:1.0.1b \
+  /bin/bash -c "cd /home/dev/project/test && rm -rf build && ceedling test:mdfu_client_info"
 ```
 
-```yaml
-:module_generator:
-:project_root: ./
-:source_root: ../
-:test_root: ./test/
+**Notes:**
+- `--user $(id -u):$(id -g)` matches the container process UID to the host filesystem owner, avoiding permission errors when Ceedling creates `test/build/`.
+- `rm -rf build` removes any stale Ceedling build output from a previous run.
+- The image tag `1.0.1b` is the latest published `madsciencelab` tag. Do not change it without verifying tests still pass.
+
+### Local Ceedling
+
+Requires Ruby (any version supported by Ceedling 1.0.x) and the Ceedling gem:
+
+```bash
+gem install ceedling
 ```
+
+From the `test/` directory:
+```bash
+ceedling test:all
+ceedling test:mdfu_client_info
+ceedling test:serial_transport_layer
+```
+
+---
+
+## CI/CD
+
+### Jenkins
+
+The Jenkins pipeline is defined in `cicd/Jenkinsfile`. It runs on a Kubernetes pod defined in `cicd/cloudprovider.yaml`, which provisions two containers:
+
+| Container | Image | Purpose |
+|---|---|---|
+| `buildpack-deps` | `buildpack-deps:stable` | CMake configure and build |
+| `ceedling` | `throwtheswitch/madsciencelab:1.0.1b` | Ceedling unit tests |
+
+Pipeline stages:
+
+1. **Install Dependencies** — installs CMake into `buildpack-deps`
+2. **Build** — configures CMake and builds the `cmdfu` executable
+3. **Test** — runs `ceedling test:all` in the `ceedling` container; test failures do not abort the pipeline so that the JUnit report is always published
+
+The JUnit XML report is written to `test/build/artifacts/test/test_report.xml` and published via the Jenkins JUnit plugin.
+
+### GitHub Actions
+
+Two workflows are defined in `.github/workflows/`:
+
+**`build.yml`** — triggered on push and pull requests to `main`, and manually via `workflow_dispatch`:
+
+| OS | Compiler | Notes |
+|---|---|---|
+| ubuntu-latest | gcc | All Linux subsystems enabled |
+| ubuntu-latest | clang | All Linux subsystems enabled |
+| windows-latest | gcc (MinGW) | Windows serial only, `--target cmdfu` |
+
+Build artifacts are uploaded as `cmdfu-<OS>-<compiler>.zip`.
+
+**`cmake-multi-platform.yml`** — additional matrix including MSVC on Windows. No artifact upload.

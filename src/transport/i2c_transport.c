@@ -385,6 +385,7 @@ static int ioctl(int request, ...){
     int result = -1;
     if(TRANSPORT_IOC_INTER_TRANSACTION_DELAY == request){
         itd_delay = (float) va_arg(args, double);
+        set_timeout(&itd_timer, 0);
         result = 0;
     }
     va_end(args);

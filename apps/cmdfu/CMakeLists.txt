@@ -1,6 +1,6 @@
 # The project version will add the cmake variables cmdfu_VERSION_MAJOR, cmdfu_VERSION_MINOR
 # and cmdfu_VERSION_PATCH
-project(cmdfu VERSION 0.3.0 LANGUAGES C)
+project(cmdfu VERSION 0.4.0 LANGUAGES C)
 add_executable(cmdfu main.c cli_parser.c)
 
 # Create version.h file. The version is set by the project() command.
@@ -11,6 +11,15 @@ target_include_directories(cmdfu PUBLIC "${PROJECT_DIR}/include")
 target_include_directories(cmdfu PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(cmdfu PRIVATE mdfulib toolslib transportlib maclib utilslib)
+
+# Check if the current operating system is Windows
+if(WIN32)
+    # Check if the compiler is MinGW
+    if(MINGW)
+        # Set additional linker flags for MinGW to statically link libraries
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ -static")
+    endif()
+endif()
 
 # Specify the installation rules
 install(TARGETS cmdfu

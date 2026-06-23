@@ -7,6 +7,8 @@
 #include "mock_checksum.h"
 #include "logging.h"
 
+TEST_INCLUDE_PATH("../include/mdfu")
+
 static mac_t mock_mac;
 static timeout_t mock_timer;
 

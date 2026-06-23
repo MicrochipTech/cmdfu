@@ -9,9 +9,9 @@
 #include "mdfu/mac/i2cdev_mac.h"
 
 #define TOOL_PARAMETERS_HELP "\
-Serial Tool Options:\n\
-    --address <address>: e.g. 55\n\
-    --dev <device> e.g. /dev/i2c-0"
+I2C Tool Options (--tool i2cdev):\n\
+    --address <address>    I2C target address (0-127), e.g. 55\n\
+    --dev <device>         I2C device path, e.g. /dev/i2c-0\n"
 
 static mac_t *i2cdev_mac = NULL;
 static transport_t *i2cdev_transport = NULL;

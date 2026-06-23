@@ -8,10 +8,11 @@
 #include "mdfu/logging.h"
 
 #define TOOL_PARAMETERS_HELP "\
-Networking Tool Options:\n\
-    --host <host>: e.g. 127.0.0.1\n\
-    --port <port>: e.g. 5559\n\
-    --transport <transport>: Chose from serial, spi. Default is serial"
+Network Tool Options (--tool network):\n\
+    --host <host>          Remote host (default: localhost), e.g. 127.0.0.1\n\
+    --port <port>          TCP port (default: 5559)\n\
+    --transport <type>     Transport type to use over the network connection.\n\
+                           Valid values: serial, serial-buffered, spi, i2c\n"
 
 /** @brief MAC layer pointer */
 static mac_t *net_mac = NULL;

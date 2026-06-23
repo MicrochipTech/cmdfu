@@ -38,7 +38,7 @@ pipeline {
         stage('Build') {
             steps {
                 execute("cmake -S ./ -B ./build")
-                execute("cd ./build;make")
+                execute("cmake --build ./build --target cmdfu")
             }
         }
         stage('Test') {
@@ -47,7 +47,7 @@ pipeline {
                     script {
                         // Build should not stop execution when ceedling returns error code. Ceedling will return error code if any tests fail,
                         // but this will normally terminate execution and test report will just be ignored
-                        execute("cd test;ceedling test:all || true")
+                        execute("cd test && rm -rf build && ceedling test:all || true")
                     }
                     // store ceedling test report that was generated in junit format
                     junit env.TEST_REPORT_PATH
