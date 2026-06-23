@@ -17,7 +17,7 @@ spec:
           cpu: 2
           memory: 8Gi
     - name: ceedling
-      image: throwtheswitch/madsciencelab:0.3.2
+      image: throwtheswitch/madsciencelab:1.0.1b
       imagePullPolicy: Always
       command: ['cat']
       tty: true
