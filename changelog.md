@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 - MDFU-25: Reset inter-transaction delay on I2C transport when delay values are updated
 - MDFU-34: Command line help fixes
+- MDFU-35: Fixed test builds
 
 ## 0.3.0
 
