@@ -207,10 +207,20 @@ Packages produced: TGZ binary, DEB (Debian), and TBZ2 source archive.
 
 ## Testing
 
-Unit tests use the [Ceedling](https://github.com/ThrowTheSwitch/Ceedling) framework. Tests are supported on Linux only and are run inside a Docker container:
+Unit tests use the [Ceedling](https://github.com/ThrowTheSwitch/Ceedling) framework. Tests are supported on Linux only and are run inside a Docker container.
+
+The CMake build tree must be configured first so that the generated header `build/include/mdfu/mdfu_config.h` exists, as it is referenced by the test source paths in `test/project.yml`.
 
 ```bash
-docker run --rm -v $(pwd):/workspace throwtheswitch/madsciencelab:1.0.8 /bin/bash -c "cd /workspace && ceedling test:all"
+cmake -B build
+docker run --rm -v $(pwd):/home/dev/project --user $(id -u):$(id -g) throwtheswitch/madsciencelab:1.0.1b \
+  /bin/bash -c "cd /home/dev/project/test && rm -rf build && ceedling test:all"
+```
+
+To run a single test:
+```bash
+docker run --rm -v $(pwd):/home/dev/project --user $(id -u):$(id -g) throwtheswitch/madsciencelab:1.0.1b \
+  /bin/bash -c "cd /home/dev/project/test && rm -rf build && ceedling test:mdfu_client_info"
 ```
 
 > Note: Windows builds do not include test targets. Use `--target cmdfu` when building on Windows.
