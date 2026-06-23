@@ -9,10 +9,10 @@
 #include "mdfu/mac/spidev_mac.h"
 
 #define TOOL_PARAMETERS_HELP "\
-Serial Tool Options:\n\
-    --clk-speed <clock speed>: e.g. 1000000\n\
-    --dev <device> e.g. /dev/spidev0.0\n\
-    --mode <mode> One of [0, 1, 2, 3]\n"
+SPI Tool Options (--tool spidev):\n\
+    --clk-speed <hz>       SPI clock speed in Hz, e.g. 1000000\n\
+    --dev <device>         SPI device path, e.g. /dev/spidev0.0\n\
+    --mode <mode>          SPI mode: 0, 1, 2, or 3\n"
 
 static mac_t *spidev_mac = NULL;
 static transport_t *spidev_transport = NULL;

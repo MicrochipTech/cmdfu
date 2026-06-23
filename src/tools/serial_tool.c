@@ -9,9 +9,16 @@
 #include "mdfu/mac/serial_mac.h"
 
 #define TOOL_PARAMETERS_HELP "\
-Serial Tool Options:\n\
-    --baudrate <baudrate>: e.g. 9600\n\
-    --port <port> e.g. /dev/ttyACM0\n"
+Serial Tool Options (--tool serial):\n\
+    --port <port>          Serial port, e.g. /dev/ttyACM0 or COM11\n\
+    --baudrate <baudrate>  Baud rate (default: 115200).\n\
+                           On Linux, must be a standard termios rate:\n\
+                           9600, 19200, 38400, 57600, 115200, 230400,\n\
+                           460800, 500000, 576000, 921600, 1000000,\n\
+                           1152000, 1500000, 2000000, 2500000, 3000000,\n\
+                           3500000, 4000000\n\
+                           On Windows, any rate supported by the COM port\n\
+                           driver is accepted.\n"
 
 static mac_t *serial_mac = NULL;
 static transport_t *serial_transport = NULL;
