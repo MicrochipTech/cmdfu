@@ -2,6 +2,9 @@
 #include "mdfu/logging.h"
 #include "mdfu/mac/socket_mac.h"
 
+TEST_SOURCE_FILE("../src/mac/socket_mac.c")
+TEST_SOURCE_FILE("../src/utils/logging.c")
+
 void setUp(void){
     init_logging(stderr);
     set_debug_level(DEBUGLEVEL);

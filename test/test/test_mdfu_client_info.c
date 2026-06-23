@@ -4,6 +4,10 @@
 #include "mdfu/mdfu.h"
 #include "mdfu/logging.h"
 
+TEST_SOURCE_FILE("../src/mdfu/mdfu.c")
+TEST_SOURCE_FILE("../src/utils/logging.c")
+TEST_SOURCE_FILE("../src/utils/image_reader.c")
+
 extern int mdfu_decode_client_info(const uint8_t *data, int length, client_info_t *client_info);
 
 void setUp(void){

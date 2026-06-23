@@ -38,7 +38,7 @@
     - +:../src/tools
     - +:../src/utils
   :include:
-    - +:../include/**
+    - +:../include
     - +:../build/include
     - +:../src
     - +:test/**
@@ -51,7 +51,8 @@
   # in order to add common defines:
   #  1) remove the trailing [] from the :common: section
   #  2) add entries to the :common: section (e.g. :test: has TEST defined)
-  :common: &common_defines []
+  :common: &common_defines
+    - _DEFAULT_SOURCE
   :test:
     - *common_defines
     - TEST
