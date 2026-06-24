@@ -28,11 +28,6 @@ jobs:
     - name: Checkout source
       uses: actions/checkout@v7
 
-    - name: Set up CMake
-      uses: lukka/get-cmake@v4.3.3
-      with:
-        cmakeVersion: "^3.25.0"
-
     - name: Configure CMake
       run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
 
